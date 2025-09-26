@@ -5,16 +5,14 @@ using UnityEngine.Pool;
 
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] private GameObject _enemyPrefab;
-    [SerializeField] private float _spawnInterval = 2f;
+    [SerializeField] private Enemy _enemyPrefab;
+    [SerializeField] private int _spawnPointCount = 4;
+    [SerializeField] private float _spawnInterval = 6f;
     [SerializeField] private float _planeSize = 1;
-    [SerializeField] private GameObject _spawnPoint_1;
-    [SerializeField] private GameObject _spawnPoint_2;
-    [SerializeField] private GameObject _spawnPoint_3;
-    [SerializeField] private GameObject _spawnPoint_4;
+    [SerializeField] private bool _isSpawning = true;
 
     private ObjectPool<Enemy> _enemyPool;
-    private List<GameObject> _spawnPoints = new List<GameObject>();
+    private List<Vector3> _spawnPoints;
 
     private void Awake()
     {
@@ -27,41 +25,53 @@ public class Spawner : MonoBehaviour
             defaultCapacity: 80,
             maxSize: 10
         );
-
-        _spawnPoints.Add(_spawnPoint_1);
-        _spawnPoints.Add(_spawnPoint_2);
-        _spawnPoints.Add(_spawnPoint_3);
-        _spawnPoints.Add(_spawnPoint_4);
     }
 
-    private void Update()
+    private void Start()
     {
-        GenerateEnemy();
-    }
-
-    private void GenerateEnemy()
-    {
-        while (true)
-        {
-            StartCoroutine(WaitRoutine());
-        }
+        StartCoroutine(WaitRoutine());
+        InitializeSpawnPoints();
     }
 
     private IEnumerator WaitRoutine()
     {
-        yield return new WaitForSeconds(_spawnInterval);
-        GetEnemy();
+        while (_isSpawning == true)
+        {
+            yield return new WaitForSeconds(_spawnInterval);
+            GetEnemy();
+        }
+    }
+
+    private void InitializeSpawnPoints()
+    {
+        for(int i = 0; i < _spawnPointCount; i++)
+        {
+            Vector3 spawnPoint = CreateSpawnPoint();
+            _spawnPoints.Add(spawnPoint);
+        }
+    }
+
+    private Vector3 CreateSpawnPoint()
+    {
+        float xArea = Random.Range(-_planeSize, _planeSize);
+        float zArea = Random.Range(-_planeSize, _planeSize);
+
+        return new Vector3(xArea, 0, zArea);
+    }
+
+    private Vector3 GetSpawnPoint()
+    {
+        int randomIndex = Random.Range(0, _spawnPoints.Count);
+        return _spawnPoints[randomIndex];
     }
 
     private void GetEnemy()
     {
         Enemy enemy = _enemyPool.Get();
+
         enemy.Died += ReleaseEnemy;
         enemy.gameObject.SetActive(true);
-
-        
-        GameObject spawnPoint = ChooseSpawnPoint();
-        enemy.transform.position = spawnPoint.transform.position;
+        enemy.StandOnPosition(GetSpawnPoint());
 
         Vector3 direction = GetRandomVector();
         enemy.Go(direction);
@@ -69,22 +79,17 @@ public class Spawner : MonoBehaviour
 
     private void ReleaseEnemy(Enemy enemy)
     {
-        enemy.ResetEnemy();
         enemy.gameObject.SetActive(false);
         enemy.Died -= ReleaseEnemy;
-        _enemyPool.Release(enemy);
-    }
 
-    private GameObject ChooseSpawnPoint()
-    {
-        return _spawnPoints[Random.Range(0, _spawnPoints.Count)];
+        _enemyPool.Release(enemy);
     }
 
     private Vector3 GetRandomVector()
     {
-        float randomIndex_1 = Random.Range(0, _planeSize);
-        float randomIndex_2 = Random.Range(0, _planeSize);
-        
+        float randomIndex_1 = Random.Range(-_planeSize, _planeSize);
+        float randomIndex_2 = Random.Range(-_planeSize, _planeSize);
+
         return new Vector3(randomIndex_1, randomIndex_2);
     }
 }

@@ -11,6 +11,11 @@ public class Enemy : MonoBehaviour
 
     public event Action<Enemy> Died;
 
+    public void StandOnPosition(Vector3 position)
+    {
+        transform.position = position;
+    }
+
     public void Go(Vector3 direction)
     {
         transform.position += direction * _speed * Time.deltaTime;
@@ -27,6 +32,7 @@ public class Enemy : MonoBehaviour
     IEnumerator WaitRoutine()
     {
         yield return new WaitForSeconds(_lifeTime);
+        ResetEnemy();
         Died?.Invoke(this);
     }
 }
