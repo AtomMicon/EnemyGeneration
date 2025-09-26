@@ -148,13 +148,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 595f1a02bcee8994faf484e356d26288, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _enemyPrefab: {fileID: 5361879790043926141, guid: b30afc40ee5aff84d9e10a1016a49a67, type: 3}
+  _enemyPrefab: {fileID: -1922171738077730198, guid: b30afc40ee5aff84d9e10a1016a49a67, type: 3}
+  _enemyCount: 8
+  _enemyMaxCount: 10
+  _spawnPointPrefab: {fileID: 5828494102252171718, guid: cbb937dabb96459449fe44c7327fdecc, type: 3}
+  _spawnPointCount: 4
+  _spawnMaxPointCount: 6
   _spawnInterval: 2
+  _isSpawning: 1
   _planeSize: 1
-  _spawnPoint_1: {fileID: 1407930812}
-  _spawnPoint_2: {fileID: 928470834}
-  _spawnPoint_3: {fileID: 454684480}
-  _spawnPoint_4: {fileID: 304554599}
 --- !u!4 &161327278
 Transform:
   m_ObjectHideFlags: 0

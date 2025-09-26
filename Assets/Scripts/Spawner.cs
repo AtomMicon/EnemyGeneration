@@ -6,31 +6,44 @@ using UnityEngine.Pool;
 public class Spawner : MonoBehaviour
 {
     [SerializeField] private Enemy _enemyPrefab;
+    [SerializeField] private int _enemyCount = 8;
+    [SerializeField] private int _enemyMaxCount = 10;
+    [SerializeField] private SpawnPoint _spawnPointPrefab;
     [SerializeField] private int _spawnPointCount = 4;
+    [SerializeField] private int _spawnMaxPointCount = 6;
     [SerializeField] private float _spawnInterval = 6f;
-    [SerializeField] private float _planeSize = 1;
     [SerializeField] private bool _isSpawning = true;
+    [SerializeField] private float _planeSize = 2f;
 
     private ObjectPool<Enemy> _enemyPool;
-    private List<Vector3> _spawnPoints;
+    private ObjectPool<SpawnPoint> _spawnPointPool;
 
     private void Awake()
     {
         _enemyPool = new ObjectPool<Enemy>(
             createFunc: () => Instantiate(_enemyPrefab).GetComponent<Enemy>(),
-            actionOnGet: enemy => GetEnemy(),
+            actionOnGet: enemy => enemy.gameObject.SetActive(true),
             actionOnRelease: enemy => ReleaseEnemy(enemy),
             actionOnDestroy: enemy => Destroy(enemy.gameObject),
             collectionCheck: true,
-            defaultCapacity: 80,
-            maxSize: 10
+            defaultCapacity: _spawnPointCount,
+            maxSize: _enemyMaxCount
+        );
+
+        _spawnPointPool = new ObjectPool<SpawnPoint>(
+            createFunc: () => Instantiate(_spawnPointPrefab),
+            actionOnGet: spawnPoint => spawnPoint.gameObject.SetActive(true),
+            actionOnRelease: spawnPoint => spawnPoint.gameObject.SetActive(false),
+            actionOnDestroy: spawnPoint => Destroy(spawnPoint.gameObject),
+            collectionCheck: true,
+            defaultCapacity: _spawnPointCount,
+            maxSize: _spawnMaxPointCount
         );
     }
 
     private void Start()
     {
         StartCoroutine(WaitRoutine());
-        InitializeSpawnPoints();
     }
 
     private IEnumerator WaitRoutine()
@@ -42,36 +55,20 @@ public class Spawner : MonoBehaviour
         }
     }
 
-    private void InitializeSpawnPoints()
+    private void CreateSpawnPoint()
     {
-        for(int i = 0; i < _spawnPointCount; i++)
-        {
-            Vector3 spawnPoint = CreateSpawnPoint();
-            _spawnPoints.Add(spawnPoint);
-        }
-    }
-
-    private Vector3 CreateSpawnPoint()
-    {
-        float xArea = Random.Range(-_planeSize, _planeSize);
-        float zArea = Random.Range(-_planeSize, _planeSize);
-
-        return new Vector3(xArea, 0, zArea);
-    }
-
-    private Vector3 GetSpawnPoint()
-    {
-        int randomIndex = Random.Range(0, _spawnPoints.Count);
-        return _spawnPoints[randomIndex];
+        SpawnPoint spawnPoint = Instantiate(_spawnPointPrefab);
+        spawnPoint.InitializeSpawnPoint();
     }
 
     private void GetEnemy()
     {
         Enemy enemy = _enemyPool.Get();
+        SpawnPoint spawnPoint = _spawnPointPool.Get();
 
         enemy.Died += ReleaseEnemy;
         enemy.gameObject.SetActive(true);
-        enemy.StandOnPosition(GetSpawnPoint());
+        enemy.StandOnPosition(spawnPoint.gameObject.transform.position);
 
         Vector3 direction = GetRandomVector();
         enemy.Go(direction);
