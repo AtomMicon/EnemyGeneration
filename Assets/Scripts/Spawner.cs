@@ -32,7 +32,7 @@ public class Spawner : MonoBehaviour
 
         _spawnPointPool = new ObjectPool<SpawnPoint>(
             createFunc: () => Instantiate(_spawnPointPrefab),
-            actionOnGet: spawnPoint => spawnPoint.gameObject.SetActive(true),
+            actionOnGet: spawnPoint => CreateSpawnPoint(spawnPoint),
             actionOnRelease: spawnPoint => spawnPoint.gameObject.SetActive(false),
             actionOnDestroy: spawnPoint => Destroy(spawnPoint.gameObject),
             collectionCheck: true,
@@ -43,6 +43,7 @@ public class Spawner : MonoBehaviour
 
     private void Start()
     {
+        SetSpawnPoints();
         StartCoroutine(WaitRoutine());
     }
 
@@ -55,16 +56,23 @@ public class Spawner : MonoBehaviour
         }
     }
 
-    private void CreateSpawnPoint()
+    private void SetSpawnPoints()
     {
-        SpawnPoint spawnPoint = Instantiate(_spawnPointPrefab);
+        for (int i = 0; i < _spawnPointCount; i++)
+        {
+            SpawnPoint spawnPoint = _spawnPointPool.Get();
+        }
+    }
+
+    private void CreateSpawnPoint(SpawnPoint spawnPoint)
+    {
+        spawnPoint.gameObject.SetActive(true);
         spawnPoint.InitializeSpawnPoint();
     }
 
     private void GetEnemy()
     {
         Enemy enemy = _enemyPool.Get();
-        SpawnPoint spawnPoint = _spawnPointPool.Get();
 
         enemy.Died += ReleaseEnemy;
         enemy.gameObject.SetActive(true);
